@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>JS All</title>
+	<style type="text/css">
+		body {
+		  font-family: helvetica neue;
+		}
+		#example {
+		  padding: 100px;
+		  background: #ff0000;
+		  color: white;
+		  font-size: 36px;
+		}
+	</style>
+	<link rel="stylesheet" type="text/css" href="https://labs.abeautifulsite.net/jquery-minicolors/jquery.minicolors.css">
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+	<div class="form-group">
+	    <label for="wheel-demo">Color Picker</label><br>
+	    
+	    <input type="text" id="wheel-demo" class="demo" data-control="wheel" value="#ff0000">
+	</div><br><br>
+	<div id="example" style="text-align: center;">Example Text</div>
+</body>
+
+
+<script src="https://unpkg.com/brain.js@1.0.0-rc.3/browser.js"></script>
+<script type="text/javascript" src="https://labs.abeautifulsite.net/jquery-minicolors/jquery.minicolors.js"></script>
+
+
+<script type="text/javascript">
+	
+	function getRgb(hex) {
+	  var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+	  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+	      return r + r + g + g + b + b;
+	  });
+
+	  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	  return result ? {
+	      r: Math.round(parseInt(result[1], 16) / 2.55) / 100,
+	      g: Math.round(parseInt(result[2], 16) / 2.55) / 100,
+	      b: Math.round(parseInt(result[3], 16) / 2.55) / 100,
+	  } : null;
+	}
+
+	$(document).ready( function() {
+
+      $('.demo').each( function() {
+        
+        $(this).minicolors({
+          control: $(this).attr('data-control') || 'hue',
+          defaultValue: $(this).attr('data-defaultValue') || '',
+          format: $(this).attr('data-format') || 'hex',
+          keywords: $(this).attr('data-keywords') || '',
+          inline: $(this).attr('data-inline') === 'true',
+          letterCase: $(this).attr('data-letterCase') || 'lowercase',
+          opacity: $(this).attr('data-opacity'),
+          position: $(this).attr('data-position') || 'bottom left',
+          swatches: $(this).attr('data-swatches') ? $(this).attr('data-swatches').split('|') : [],
+          change: function(hex, opacity) {
+            var log;
+            try {
+              log = hex ? hex : 'transparent';
+              	
+              	//console.log(log);
+          		const rgb = getRgb(log);
+				const network = new brain.NeuralNetwork()
+				//console.log(rgb);
+				network.train([
+				    { input: { r: 0.62, g: 0.72, b: 0.88 }, output: { light: 1 } },
+				    { input: { r: 0.1, g: 0.84, b: 0.72 }, output: { light: 1 } },
+				    { input: { r: 0.33, g: 0.24, b: 0.29 }, output: { dark: 1 } },
+				    { input: { r: 0.74, g: 0.78, b: 0.86 }, output: { light: 1 } },
+				    { input: { r: 0.31, g: 0.35, b: 0.41 }, output: { dark: 1 } },
+				    { input: {r: 1, g: 0.99, b: 0}, output: { light: 1 } },
+				    { input: {r: 1, g: 0.42, b: 0.52}, output: { dark: 1 } },
+				    { input: {r:1, g: 0.54, b: 0.52}, output: { light: 1 } }
+				])
+
+				const result = brain.likely(rgb, network)
+				//console.log(result);
+				$("#example").css("background", log);
+				if (result === "dark") {
+					$("#example").css("color", "white");
+				}else{
+					$("#example").css("color", "black");
+				}
+				  
+            } catch(e) {}
+          },
+          theme: 'default'
+        });
+
+      });
+
+    });
+</script>
+
+</html>
